@@ -52,7 +52,8 @@ export const Captions: React.FC<{ words: Word[]; accent: string; top?: number }>
         }}
       >
         {page.words.map((w, i) => {
-          const active = t >= w.start - 0.03 && t < w.end + 0.05;
+          const next = page.words[i + 1];
+          const active = t >= w.start - 0.03 && t < (next ? Math.min(w.end + 0.05, next.start - 0.03) : w.end + 0.05);
           const spoken = t >= w.start - 0.03;
           const wf = frame - Math.round(w.start * fps);
           const bump = active ? spring({ frame: wf, fps, config: { stiffness: 400, damping: 16, mass: 0.4 } }) : 0;
