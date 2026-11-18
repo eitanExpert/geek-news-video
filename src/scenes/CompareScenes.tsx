@@ -76,6 +76,13 @@ export const ListScene: React.FC<{ scene: ListProps; accent: string; durationInF
   const gap = Math.max(4, Math.min(12, Math.floor((durationInFrames * 0.6) / Math.max(1, items.length))));
   const title = pop(frame, fps, 0, 220, 16);
   const checks = scene.style === 'checks';
+  // Fit all items between the title and the captions (which start around y=1270)
+  const top = scene.title ? 420 : 300;
+  const slot = Math.min(170, Math.floor((1240 - top) / Math.max(1, items.length)));
+  const rowGap = Math.round(slot * 0.16);
+  const rowH = slot - rowGap;
+  const badge = Math.round(rowH * 0.66);
+  const itemFont = (len: number) => Math.round(Math.min(len > 18 ? 76 : 100, rowH * 0.62));
   return (
     <AbsoluteFill>
       {scene.title ? (
@@ -83,7 +90,7 @@ export const ListScene: React.FC<{ scene: ListProps; accent: string; durationInF
           {scene.title}
         </div>
       ) : null}
-      <div style={{ position: 'absolute', top: scene.title ? 420 : 300, left: 80, right: 80, display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div style={{ position: 'absolute', top, left: 80, right: 80, display: 'flex', flexDirection: 'column', gap: rowGap }}>
         {items.map((it, i) => {
           const at = 4 + i * gap;
           const p = pop(frame, fps, at, 260, 15);
@@ -96,7 +103,9 @@ export const ListScene: React.FC<{ scene: ListProps; accent: string; durationInF
                 display: 'flex',
                 alignItems: 'center',
                 gap: 30,
-                padding: '28px 40px',
+                height: rowH,
+                boxSizing: 'border-box',
+                padding: '0 40px',
                 borderRadius: 28,
                 background: COLORS.panel,
                 border: `3px solid ${i === items.length - 1 ? accent : 'rgba(255,255,255,0.15)'}`,
@@ -106,11 +115,11 @@ export const ListScene: React.FC<{ scene: ListProps; accent: string; durationInF
               }}
             >
               {checks ? (
-                <Check size={92} p={tick} color={accent} />
+                <Check size={badge} p={tick} color={accent} />
               ) : (
-                <div style={{ width: 92, height: 92, borderRadius: 24, background: accent, color: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 64 }}>{i + 1}</div>
+                <div style={{ width: badge, height: badge, flexShrink: 0, borderRadius: 24, background: accent, color: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: Math.round(badge * 0.7) }}>{i + 1}</div>
               )}
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: it.length > 18 ? 76 : 100, color: '#fff', textTransform: 'uppercase', lineHeight: 1.05 }}>{it}</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: itemFont(it.length), color: '#fff', textTransform: 'uppercase', lineHeight: 1.05 }}>{it}</div>
             </div>
           );
         })}
