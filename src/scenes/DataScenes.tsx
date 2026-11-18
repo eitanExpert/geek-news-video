@@ -9,7 +9,7 @@ export const StatScene: React.FC<{ scene: StatProps; accent: string; durationInF
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const countLen = Math.min(30, Math.round(durationInFrames * 0.45));
-  const p = interpolate(frame, [4, 4 + countLen], [0, 1], { ...clamp, easing: Easing.out(Easing.expo) });
+  const p = interpolate(frame, [4, 4 + countLen], [0, 1], { ...clamp, easing: Easing.out(Easing.exp) });
   const dec = scene.decimals ?? (Number.isInteger(scene.value) ? 0 : 1);
   const val = (scene.value * p).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
   const land = 4 + countLen;
