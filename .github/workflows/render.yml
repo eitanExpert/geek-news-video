@@ -1,0 +1,59 @@
+name: Render video
+run-name: Render ${{ inputs.job_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: 'Unique id for this render (becomes the release tag)'
+        required: true
+        default: 'test-sample'
+      props:
+        description: 'Video props as JSON (leave empty to render the sample video)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: render-${{ inputs.job_id }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: modules-${{ runner.os }}-${{ hashFiles('package.json') }}
+
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Write props
+        env:
+          PROPS: ${{ inputs.props }}
+        run: |
+          if [ -z "$PROPS" ]; then cp sample-props.json props.json; else printf '%s' "$PROPS" > props.json; fi
+          node -e "JSON.parse(require('fs').readFileSync('props.json','utf8')); console.log('props ok')"
+
+      - name: Render
+        run: npx remotion render src/index.ts GeekNews out/video.mp4 --props=props.json --log=info
+
+      - name: Publish as release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB: ${{ inputs.job_id }}
+        run: |
+          gh release delete "$JOB" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$JOB" out/video.mp4 --title "$JOB" --notes "Rendered by GitHub Actions"
